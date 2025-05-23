@@ -1,0 +1,11 @@
+#イコール=のあと、スペースを入れないで書く。
+DB_DRIVER={ODBC Driver 18 for SQL Server}
+AZURE_SQL_SERVER=your-server.database.windows.net
+AZURE_SQL_DATABASE=your-database
+AZURE_SQL_USERNAME=your-username
+AZURE_SQL_PASSWORD=your-password
+
+AZURE_OPENAI_API_KEY=YOUR_AZURE_OPENAI_KEY    #例：ZmJxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxOGkU39   # AzureポータルからコピーしたAPIキーを貼り付けます。
+AZURE_OPENAI_ENDPOINT=YOUR_AZURE_OPENAI_ENDPOINT #例：https://openai-xxx-sample.openai.azure.com/    # Azureポータルからコピーしたエンドポイントを貼り付けます。
+AZURE_OPENAI_API_VERSION=YYYY-MM-DD-preview    #例：2023-12-01-preview   #超重要（モデルバージョン）
+AZURE_OPENAI_DEPLOYMENT_NAME=gpt-xxx    #例：gpt-4o-mini-chat-name    # Azureで作ったデプロイメント名

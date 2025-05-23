@@ -1,0 +1,5 @@
+{
+  "customer_mst": ["email", "name", "gender", "birth_date", "phone_number", "prefecture", "city"],
+  "catalog_mst": [],
+  "catalog_product_map": []
+}
