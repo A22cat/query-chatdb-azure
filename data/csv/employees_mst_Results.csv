@@ -1,6 +1,0 @@
-corp_id,employee_id,name,department,role,email,phone_number,hire_date,status,manager_id,salary,created_at
-1,1,山田 太郎,営業,一般,taro.yamada@example.com,090-1234-5678,2020-04-01,在籍,NULL,300.00,2025-05-15 06:29:07.103
-1,2,鈴木 花子,開発,管理職,hanako.suzuki@example.com,080-2345-6789,2019-03-15,在籍,1,500.00,2025-05-15 06:29:07.103
-1,4,中村 次郎,営業,一般,jiro.nakamura@example.com,090-4567-8901,2021-07-20,在籍,2,350.00,2025-05-15 06:29:07.103
-2,3,佐藤 一郎,人事,部長,ichiro.sato@example.com,070-3456-7890,2018-05-10,休職,NULL,550.00,2025-05-15 06:29:07.103
-3,5,田中 三郎,管理,役員,saburo.tanaka@example.com,080-5678-9012,2017-11-25,退職,NULL,800.00,2025-05-15 06:29:07.103
