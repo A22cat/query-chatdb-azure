@@ -3,6 +3,7 @@
 ---
 
 ## 1. ソリューション概要
+
 - ソリューション名：QueryChatDbAzure(対話型DBクエリ支援システム)
 - プロダクト名：Qnect(キュネクト)
 
@@ -12,11 +13,13 @@ QueryChatDbAzureは、生成AIとAzureクラウド技術を活用し、自然言
 
 ---
 ## 2. 解決したい課題
+
 企業内の業務データベースは情報が豊富である一方、専門的な知識がないと活用が難しく、日常業務での意思決定や問い合わせ対応に活かしきれていません。これにより、「必要な情報にすぐにアクセスできない」「IT部門への依頼が発生する」といった非効率が生まれています。
 
 ---
 
 ## 3. 主な機能
+
 - 自然言語からのクエリ生成・実行(SQL自動生成)
 - クエリ結果の要約・分析
 - データアクセス・変更を防ぐためのセキュリティ機能
@@ -59,20 +62,22 @@ QueryChatDbAzureは、生成AIとAzureクラウド技術を活用し、自然言
 ---
 
 ## 6. システム構成(予定)
+
 [User (業務ユーザー)]
-↓(自然言語クエリ入力)
+        ↓(自然言語クエリ入力)
 [Streamlit UI]
-↓
+        ↓
 [Python/FastAPI エージェントレイヤー]
-↓ ↘
-[Azure OpenAI (LLM)] [Azure AI Search]
-↓(SQL生成) ↘
+        ↓                        ↘
+[Azure OpenAI (LLM)]      [Azure AI Search]
+        ↓(SQL生成)               ↘
 [Azure SQL Database
-/Cosmos DB 実行エンジン] ←→ [メタデータベース]
+/Cosmos DB 実行エンジン]  ←→  [メタデータベース]
 
 ---
 
 ## 7. 想定されるユースケースと効果
+
 | ユースケース                 | 効果                                                              |
 |-----------------------------|-------------------------------------------------------------------|
 | 営業担当者の在庫確認         | 数秒でチャット経由で販売データや在庫確認。時間短縮と顧客対応力向上。 |
@@ -82,6 +87,7 @@ QueryChatDbAzureは、生成AIとAzureクラウド技術を活用し、自然言
 ---
 
 ## 8. 拡張構想
+
 - Chat履歴を元にした継続的な対話(LangChain memory連携)
 - 会話の中でコンテキストやメモリを適切に渡す
 - 埋込用ベクトル生成＋類似検索(Azure OpenAI Embedding + Cosmos DB ベクトルインデックス)(今後実装予定)
@@ -92,7 +98,7 @@ QueryChatDbAzureは、生成AIとAzureクラウド技術を活用し、自然言
 
 ## 9. GitHubリポジトリのURL
 - メインリポジトリ：
-  https://github.com/A22cat
+https://github.com/A22cat
 
 - 本課題実装のリポジトリ：
-  https://github.com/A22cat/query-chatdb-azure
+https://github.com/A22cat/query-chatdb-azure
