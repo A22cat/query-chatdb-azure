@@ -38,10 +38,11 @@ QueryChatDbAzureは、生成AIとAzureクラウド技術を活用し、自然言
 -Python / FastAPI(バックエンド)
 -Streamlit(UI)
 -Azure App Service
--Azure AI Search         (今後実装予定)
--Azure Cosmos DB         (今後実装予定)
--LangChain               (未実装)
--Azure OpenAI (embedding)(未実装)
+-Azure AI Search               (今後実装予定)
+-Azure OpenAI (Embeddingモデル)(今後実装予定)
+-Azure Cosmos DB               (今後実装予定)
+-LangChain                     (未実装)
+
 
 ---
 
