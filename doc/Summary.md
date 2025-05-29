@@ -100,5 +100,5 @@ QueryChatDbAzureは、生成AIとAzureクラウド技術を活用し、自然言
 - メインリポジトリ：
 https://github.com/A22cat
 
-- 本課題実装のリポジトリ：
+- 本テーマ実装のリポジトリ：
 https://github.com/A22cat/query-chatdb-azure

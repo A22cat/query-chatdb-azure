@@ -258,13 +258,13 @@ if st.session_state.query_result_ui is not None:
 
 # 要約表示を常に維持(通常のUI側)
 if st.session_state.summary_ui:
-    st.markdown("### ■要約")
+    st.markdown("### 要約")
     #AIからの返答を表示
     st.write(st.session_state.summary_ui)
 
 # 8. チャット履歴の確認(左パネル)←1箇所に統一
 with st.sidebar:
-    st.markdown("### 保存されたチャット履歴")
+    st.markdown("### 要約と結果説明の履歴")
     show_panel = st.checkbox("表示する", value=False, key="toggle_history")
     if show_panel:
         if os.path.exists(HISTORY_PATH):
@@ -286,9 +286,9 @@ with st.sidebar:
             st.info("履歴がまだ存在しません。")
 
 # 履歴をプロンプトに変換する関数
-def build_chat_context(history, limit=3):
+def build_chat_context(history, limit=2):
     messages = []
-    for h in history[-limit:]:  # 最新の3件までに絞る（Token節約）
+    for h in history[-limit:]:  # 最新の2件までに絞る（Token節約）
         messages.append({"role": "user", "content": f"質問: {h.get('question', '')}"})
         messages.append({"role": "user", "content": f"生成SQL:\n{h.get('generated_sql', '')}"})
         if "summary_ui" in h:
@@ -333,8 +333,10 @@ if st.session_state.summary_ui:
             # ローディング表示
             with st.spinner('AIが考え中...'):
                 try:
-                    # 履歴から過去メッセージ構築（最新2件）
+                    # 履歴から過去メッセージ構築（最新2-3件）
                     history_messages = build_chat_context(st.session_state.chat_history, limit=2)
+                    st.write(history_messages )#確認結果
+                    
                     # 現在のユーザー入力を追加
                     current_input = {"role": "user", "content": user_input}
                     messages = history_messages + [current_input]
@@ -425,7 +427,7 @@ if st.session_state.generated_sql_chat:
         with col1:
             exec_clicked = st.button("SQL実行 (チャット用)")
         with col2:
-            cancel_clicked = st.button("戻る (実行しない)")
+            cancel_clicked = st.button("戻る (SQL実行しない)")
         # op_col3は空白スペース用
 
 
@@ -443,19 +445,23 @@ if st.session_state.generated_sql_chat:
                 st.session_state.masked_query_result_chat = masked_df
                 #st.dataframe(masked_df)
                 
-                # チャットに要約を即時反映
                 # 表示用にCSV形式に変換（先頭5行などに制限可）
                 df_preview = st.session_state.masked_query_result_chat.head(5)  # 必要に応じて制限
                 result_text = df_preview.to_markdown(index=False)  # Markdownで表形式
                 #チャットの上部の履歴へ
                 st.session_state.messages.append({"role": "assistant", "content": f"SQL実行結果（上位5件）:\n```\n{result_text}\n```"})
                 # 通常のUIにも表示（任意）
+                #st.markdown("### SQL実行結果(チャット)")
                 #st.dataframe(st.session_state.masked_query_result_chat)
                 st.success("SQLを実行しました")
                 st.rerun()  # 上部の履歴に即座に反映させるために必要
             except Exception as e:
                 st.error(f"SQL実行エラー：{e}")
-
+        
+        # SQL実行結果を常に表示(通常のUI側)
+        if st.session_state.query_result_chat is not None:
+            st.markdown("### SQL実行結果(チャット)")
+            st.dataframe(st.session_state.masked_query_result_chat)
 
         if cancel_clicked:
             st.session_state.generated_sql_chat = ""
@@ -465,17 +471,13 @@ if st.session_state.generated_sql_chat:
             st.session_state.show_generated_sql_chat = False
             st.session_state.show_summary_chat_button = False
             st.rerun()
-        
-        #if cancel_clicked:
-        #    st.session_state.generated_sql_chat = ""
-        #    st.session_state.show_generated_sql_chat = False
-        #    st.session_state.query_result_chat = False
-        #    st.rerun()
+
 
 
 # 11. 要約と結果の説明(チャットのUI側)
 if st.session_state.query_result_chat is not None:
     if st.button("要約と結果の説明 (チャット用)"):
+
         with st.spinner("チャットの要約と結果の説明を作成中..."):
             try:
                 df_sample = st.session_state.masked_query_result_chat.head(8)
@@ -490,7 +492,7 @@ if st.session_state.query_result_chat is not None:
                     model=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME"),
                     messages=[
                         {"role": "system", "content": "あなたはデータ要約アシスタントです。"},
-                        {"role": "user", "content": f"ユーザーの質問: {user_question}"},
+                        {"role": "user", "content": f"ユーザーの質問: {user_input}"},
                         {"role": "user", "content": f"実行したSQL:\n{st.session_state.generated_sql_chat}"},
                         {"role": "user", "content": f"CSVデータ:\n{sample_text_csv}"},
                         {"role": "user", "content": summarize_prompt}
@@ -519,6 +521,14 @@ if st.session_state.query_result_chat is not None:
                 }
                 st.session_state.chat_history.append(chat_entry)
                 save_chat_history_to_file(chat_entry)
+
+                st.session_state.generated_sql_chat = ""
+                st.session_state.query_result_chat = None
+                st.session_state.masked_query_result_chat = None
+                st.session_state.summary_chat = ""
+                st.session_state.show_generated_sql_chat = False
+                st.session_state.show_summary_chat_button = False
+                st.session_state.show_generated_sql_chat = False
 
                 st.success("要約を生成しました")
                 st.rerun()  # ← 上部の履歴に即時反映。st.rerun() を呼ぶと、それ以降のコードは一切実行されません。
