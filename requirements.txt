@@ -1,5 +1,9 @@
 streamlit
+pyodbc
+pandas
 openai
 python-dotenv
-azure-search-documents
 azure-core
+azure-search-documents
+azure-cosmos
+tiktoken
