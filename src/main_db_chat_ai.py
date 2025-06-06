@@ -267,7 +267,7 @@ def save_to_cosmos(new_entry):
     except Exception as e:
         st.error(f"Cosmos DB保存エラー：{e}")
 
-# --- 既存の関数の修正 ---
+
 def save_chat_history_to_file(new_entry):
     # ... (既存のJSONファイルへの保存処理) ...
     try:
@@ -286,7 +286,6 @@ def save_chat_history_to_file(new_entry):
             json.dump(history, f, ensure_ascii=False, indent=2)
     except Exception as e:
         st.error(f"履歴の保存エラー: {e}")
-
 
     # Azure AI Search にもアップロード
     if AZURE_SEARCH_ENDPOINT and AZURE_SEARCH_KEY:
@@ -307,6 +306,62 @@ def save_chat_history_to_file(new_entry):
                 search_doc["summary_vector"] = embedding
         
         upload_document_to_search(search_doc)
+
+
+# 新しい会話を始めるための関数
+def start_new_conversation():
+    """
+    新しい会話を開始するために、セッション情報をクリアします。
+    通常UIとチャットUIの入力・出力をすべてリセットし、
+    AIが過去の対話履歴を引き継がないようにします。
+    """
+    # 1. 過去のQ&Aの流れがAIに引き継がれないように、AIに渡すコンテキスト履歴をクリア
+    st.session_state.chat_history = []
+    
+    # 2. 画面に表示するチャットメッセージ履歴をクリア
+    st.session_state.messages = []
+
+    # 3. 通常UIとチャットUIで生成・保持される各種情報をクリアするためのキーリスト
+    keys_to_clear = [
+        # 通常UI関連のキー
+        "user_question",            # 最初の質問入力
+        "generated_sql",            # 通常UIで生成されたSQL
+        "query_result_ui",          # 通常UIのSQL実行結果(DataFrame)
+        "masked_query_result_ui",   # マスキングされた実行結果
+        "summary_ui",               # 通常UIで生成された要約
+        "first_user_question",      # 要約後に保持される最初の質問
+        "first_sample_text_csv",    # 要約後に保持される最初の結果サンプル
+
+        # チャットUI関連のキー
+        "generated_sql_chat",       # チャットで生成されたSQL
+        "query_result_chat",        # チャットのSQL実行結果(DataFrame)
+        "masked_query_result_chat", # マスキングされた実行結果
+        "summary_chat",             # チャットで生成された要約
+        "last_user_input",          # チャットの最後のユーザー入力
+        "last_ai_response",         # チャットの最後のAI応答
+        "first_sample_text_csv_chat",# チャットの要約で使われた結果サンプル
+
+        # UIの表示状態を制御するフラグ
+        "show_generated_sql",
+        "show_summary_button",
+        "show_chat_button",
+        "show_generated_sql_chat",
+        "show_summary_chat_button"
+    ]
+
+    # 4. st.session_stateにキーが存在すれば安全に削除
+    for key in keys_to_clear:
+        if key in st.session_state:
+            del st.session_state[key]
+
+    # 5. ユーザーにクリアされたことを通知
+    st.toast("新しい会話を開始しました。入力と出力がクリアされました。", icon="🧹")
+
+    # 6. 画面を即時更新して変更を反映
+    # st.rerun()はスクリプトを最初から再実行します。
+    # しかし「ボタンのon_clickなどのコールバック関数内」で st.rerun() を呼ぶと、
+    # そのコールバックの実行が終わった後にすでにStreamlitが自動的に再実行を行うため、明示的なst.rerun()は無効（no-op）になります。
+    #st.rerun() #Calling st.rerun() within a callback is a no-op.
 
 
 # --- セッションステート初期化 ---
@@ -370,7 +425,8 @@ elif disconnect_clicked:
 
 # 2. 自然言語で質問入力
 st.markdown("### 質問を入力")
-user_question = st.text_input("例：3名の従業員を教えて")
+#st.text_inputの初期値（第2引数）をst.session_state.get("user_question", "")にして、クリア時にst.session_state["user_question"] = ""とする。
+user_question = st.text_input("例：営業部に所属している従業員の一覧を見せて。",value=st.session_state.get("user_question", ""), key="user_question")
 
 # 3. テーブルスキーマをMarkdownファイルから取得
 schema_text = ""
@@ -514,16 +570,22 @@ if st.session_state.summary_ui:
 
 # 8. チャット履歴の確認(左パネル)
 with st.sidebar:
+    st.markdown("### 会話操作")
+    # on_clickに設定した関数内で st.rerun() を呼ぶため、ボタンが押された後の st.rerun() は不要です。
+    st.button('新しい会話を始める', on_click=start_new_conversation, key="new_conversation_btn")
+
+    st.markdown("---") # 区切り線
+
     st.markdown("### 要約と結果説明、送信の履歴")
     show_panel = st.checkbox("表示する", value=False, key="toggle_history")
     if show_panel:
         if os.path.exists(HISTORY_PATH):
             with open(HISTORY_PATH, "r", encoding="utf-8") as f:
                 try:
-                    history = json.load(f)
+                    history = json.load(f) # ローカルファイルからの履歴
                 except json.JSONDecodeError:
                     history = []
-                for item in reversed(history[-5:]):
+                for item in reversed(history[-5:]): #表示するのはファイルからの履歴（最大5件）
                     st.markdown(f"**日時：** {item.get('timestamp', '')}")
                     st.markdown(f"**質問：** {item.get('question', '')}")
                     st.markdown(f"**生成SQL：** `{item.get('generated_sql', '')}`")
@@ -649,18 +711,6 @@ if st.session_state.summary_ui:
                     st.rerun()
                 except Exception as e:
                     st.error(f"チャット応答エラー（検索含む）：{e}")
-            '''
-            with st.spinner('AIが考え中...'):
-                # APIリクエスト
-                response = client.chat.completions.create(
-                    model=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME"),
-                    messages=[
-                        {"role": "user", "content": f"最新の質問: {user_input}"},
-                        {"role": "user", "content": f"1個目の項目に入力した質問: {st.session_state.first_user_question}"},
-                        {"role": "user", "content": f"実行したSQL:\n{st.session_state.generated_sql_ui}"},
-                        {"role": "user", "content": f"CSVデータ:\n{st.session_state.first_sample_text_csv}"},
-                    ]
-                )'''
 
         if nltosqlmake_clicked and user_input:
             # ユーザーのメッセージを履歴に追加(チャットの上部の履歴へ)
