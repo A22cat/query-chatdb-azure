@@ -57,18 +57,25 @@ AZURE_SEARCH_KEY = os.getenv("AZURE_SEARCH_KEY")
 AZURE_SEARCH_INDEX_NAME = os.getenv("AZURE_SEARCH_INDEX_NAME", "chat-history-index")
 AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME = os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME")
 
+# session_stateの初期化
+if "masked_query_result_ui" not in st.session_state:
+    st.session_state.masked_query_result_ui = None
+if "generated_sql_chat" not in st.session_state:
+    st.session_state.generated_sql_chat = "" # 仮の初期化
+if "conn" not in st.session_state:
+    st.session_state.conn = None # 仮の初期化
 
 # DB接続文字列の取得
 from db_config import connection_string
 
 # マスキング設定ファイルの読み込み
-#with open("config/data_masking/masking_columns.json", "r", encoding="utf-8") as f:
-#    masking_config = json.load(f)
-masking_config = {}
-masking_path = "config/data_masking/masking_columns.json"
-if os.path.exists(masking_path):
-    with open(masking_path, "r", encoding="utf-8") as f:
-        masking_config = json.load(f)
+with open("config/data_masking/masking_columns.json", "r", encoding="utf-8") as f:
+    masking_config = json.load(f)
+#masking_config = {}
+#masking_path = "config/data_masking/masking_columns.json"
+#if os.path.exists(masking_path):
+#    with open(masking_path, "r", encoding="utf-8") as f:
+#        masking_config = json.load(f)
 
 def get_mask_columns(table_name):
     return masking_config.get(table_name, [])
@@ -77,7 +84,7 @@ def get_mask_columns(table_name):
 HISTORY_PATH = "data/chat_history.json"
 
 # --- トークン数制限のためのヘルパー関数 ---
-def trim_messages_to_token_limit(messages, max_tokens=10000, model_name="gpt-4o-mini"):
+def trim_messages_to_token_limit(messages, max_tokens=10000, model_name="gpt-4o-mini"): # ■送信するトークン数の上限
     """指定されたトークン数上限を超えないようにメッセージをトリミングする"""
     try:
         enc = tiktoken.encoding_for_model(model_name)
@@ -384,12 +391,13 @@ if "chat_history" not in st.session_state:
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# --- マスキング処理 ---
+# --- マスキング処理 ---#JOINで結合された2つ目以降のテーブルもマスキング
 def mask_sensitive_data(df, mask_columns):
     df_copy = df.copy()
     for col in mask_columns:
         if col in df_copy.columns:
-            df_copy[col] = df_copy[col].astype(str).apply(lambda x: "＊＊＊" if x else x)
+            # カラムが空やNoneでないことを確認してからマスキング
+            df_copy[col] = df_copy[col].astype(str).apply(lambda x: "＊＊＊" if pd.notna(x) and x != '' else x)
     return df_copy
 
 
@@ -426,7 +434,7 @@ elif disconnect_clicked:
 # 2. 自然言語で質問入力
 st.markdown("### 質問を入力")
 #st.text_inputの初期値（第2引数）をst.session_state.get("user_question", "")にして、クリア時にst.session_state["user_question"] = ""とする。
-user_question = st.text_input("例：営業部に所属している従業員の一覧を見せて。",value=st.session_state.get("user_question", ""), key="user_question")
+user_question = st.text_input("例：各製品の総売上金額を計算し、金額が多い順に並べて。",value=st.session_state.get("user_question", ""), key="user_question")
 
 # 3. テーブルスキーマをMarkdownファイルから取得
 schema_text = ""
@@ -466,12 +474,12 @@ if st.button("SQL作成") and user_question:
                     {"role": "user", "content": f"ユーザーの質問: {user_question}"}
                 ]
                 # 送信前にトークン数を制限
-                trimmed_messages_for_sql = trim_messages_to_token_limit(messages_for_sql, max_tokens=10000, model_name="gpt-4o-mini")
+                trimmed_messages_for_sql = trim_messages_to_token_limit(messages_for_sql, max_tokens=10000, model_name="gpt-4o-mini")  # ■送信するトークン数の上限
 
                 response = client.chat.completions.create(
                     model=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME"),
                     messages=trimmed_messages_for_sql,
-                    max_tokens=500 # 受信するトークン数の上限
+                    max_tokens=1000 # ■受信するトークン数の上限
                 )
 
                 st.session_state.generated_sql = response.choices[0].message.content.strip()
@@ -531,12 +539,12 @@ if st.session_state.query_result_ui is not None:
                     {"role": "user", "content": summarize_prompt}
                 ]
                 # 送信前にトークン数を制限
-                trimmed_messages_for_summary = trim_messages_to_token_limit(messages_for_summary, max_tokens=10000, model_name="gpt-4o-mini")
+                trimmed_messages_for_summary = trim_messages_to_token_limit(messages_for_summary, max_tokens=10000, model_name="gpt-4o-mini") #■送信するトークン数の上限を設定
 
                 summary_response = client.chat.completions.create(
                     model=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME"),
                     messages=trimmed_messages_for_summary,
-                    max_tokens=50
+                    max_tokens=1000 # ■受信するトークン数の上限を設定
                 )
                 ## AIからの返答をセッション(session_state.summary_ui)に保存
                 st.session_state.summary_ui = summary_response.choices[0].message.content.strip()
@@ -598,9 +606,9 @@ with st.sidebar:
             st.info("履歴がまだ存在しません。")
 
 # 履歴をプロンプトに変換する関数
-def build_chat_context(history, limit=2):  # 最新の2件or3件までに絞る（Token節約）
+def build_chat_context(history, limit=3):  # ■最新の履歴件数はデフォルト値：3件
     messages = []
-    for h in history[-limit:]:  # 最新の2件or3件までに絞る（Token節約）
+    for h in history[-limit:]:
         messages.append({"role": "user", "content": f"質問: {h.get('question', '')}"})
         if h.get('generated_sql'): # SQLがある場合のみ追加
             messages.append({"role": "user", "content": f"生成SQL:\n{h.get('generated_sql', '')}"})
@@ -620,9 +628,9 @@ if st.session_state.summary_ui:
     # チャット履歴を表示（まず履歴だけ上に表示）
     for msg in st.session_state.messages:
         if msg["role"] == "user":
-            st.markdown(f"**あなた:** {msg['content']}")
+            st.markdown(f"**🤔あなた:** {msg['content']}")
         else:
-            st.markdown(f"**AI:** {msg['content']}")
+            st.markdown(f"**🤖AI:** {msg['content']}")
 
     # --- ここから下に入力欄とボタンを表示 ---
     st.divider()  # 仕切り線（オプション）
@@ -656,10 +664,10 @@ if st.session_state.summary_ui:
                                 retrieved_search_context_str += f"- 質問: {result.get('question', 'N/A')}\n  要約: {result.get('summary', 'N/A')}\n"
                             retrieved_search_context_str += "\n---\n"
                     # 履歴から過去メッセージ構築（最新2件）
-                    #history_messages = build_chat_context(st.session_state.chat_history, limit=2)   # 最新の2件or3件までに絞る（Token節約）
+                    #history_messages = build_chat_context(st.session_state.chat_history, limit=5)   # 最新の5件までに絞る（Token節約）
                     #st.write(history_messages )#確認結果
-                    # 履歴から過去メッセージ構築（最新2件） + AI Search結果 + 現在のユーザー入力
-                    history_messages_for_chat = build_chat_context(st.session_state.chat_history, limit=2)
+                    # 履歴から過去メッセージ構築（最新5件） + AI Search結果 + 現在のユーザー入力
+                    history_messages_for_chat = build_chat_context(st.session_state.chat_history, limit=5) #■Token節約(最新の5件)
                     constructed_messages_for_chat = []
                     # 既存のチャット履歴（画面表示用）もコンテキストに含める場合
                     # constructed_messages_for_chat.extend(st.session_state.messages[-3:]) # 最新のチャット数件
@@ -678,7 +686,7 @@ if st.session_state.summary_ui:
                     constructed_messages_for_chat.append({"role": "user", "content": user_input})
 
                     # 送信前にトークン数を制限
-                    trimmed_messages_for_chat_response = trim_messages_to_token_limit(constructed_messages_for_chat, max_tokens=10000, model_name="gpt-4o-mini")
+                    trimmed_messages_for_chat_response = trim_messages_to_token_limit(constructed_messages_for_chat, max_tokens=10000, model_name="gpt-4o-mini") # ■送信するトークン数の上限
 
                     #response = client.chat.completions.create(
                     #    model=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME"),
@@ -687,7 +695,7 @@ if st.session_state.summary_ui:
                     response = client.chat.completions.create(
                         model=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME"), # GPT-4o miniを指定
                         messages=trimmed_messages_for_chat_response,
-                        max_tokens=500
+                        max_tokens=1000 # ■受信するトークン数の上限
                     )
 
                     ai_response = response.choices[0].message.content.strip()
@@ -742,16 +750,16 @@ if st.session_state.summary_ui:
                         ]
                         
                         # チャット履歴からのコンテキストも追加する場合 (例: 直前の会話)
-                        # chat_context_messages = st.session_state.messages[-3:] # 最新3件（ユーザー入力、AI応答、ユーザー入力）
+                        # chat_context_messages = st.session_state.messages[-5:] # 最新5件（ユーザー入力、AI応答、ユーザー入力）
                         # messages_for_chat_sql = chat_context_messages + messages_for_chat_sql
 
                         # 送信前にトークン数を制限
-                        trimmed_messages_for_chat_sql = trim_messages_to_token_limit(messages_for_chat_sql, max_tokens=10000, model_name="gpt-4o-mini")
+                        trimmed_messages_for_chat_sql = trim_messages_to_token_limit(messages_for_chat_sql, max_tokens=10000, model_name="gpt-4o-mini") # ■送信するトークン数の上限
 
                         response = client.chat.completions.create(
                             model=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME"), # GPT-4o miniを指定
                             messages=trimmed_messages_for_chat_sql,
-                            max_tokens=500
+                            max_tokens=1000 # ■受信するトークン数の上限
                         )
 
                         # AIからの返答を履歴に追加
@@ -794,13 +802,25 @@ if st.session_state.generated_sql_chat:
             st.session_state.query_result_chat = df
 
             #対象テーブル名を取得してマスキング適用
-            match = re.search(r'FROM\s+([a-zA-Z0-9_]+)', st.session_state.generated_sql_chat, re.IGNORECASE)
-            table_name = match.group(1) if match else ""
-            mask_columns = get_mask_columns(table_name)
+            sql_query = st.session_state.generated_sql_chat
 
-            masked_df = mask_sensitive_data(df, mask_columns)
+            # FROM句またはJOIN句に続く全てのテーブル名を抽出
+            table_pattern = r'(?:FROM|JOIN)\s+([a-zA-Z0-9_]+)'
+            tables_in_query = re.findall(table_pattern, sql_query, re.IGNORECASE)
+
+            # 取得した全テーブルからマスキング対象のカラムリストを生成
+            all_mask_columns = []
+            for table_name in set(tables_in_query): # set()でテーブル名の重複を排除
+                all_mask_columns.extend(get_mask_columns(table_name))
+
+            # 最終的なマスキング対象カラムリスト（重複削除）
+            unique_mask_columns = list(set(all_mask_columns))
+
+            # データフレームのマスキング処理
+            masked_df = mask_sensitive_data(df, unique_mask_columns)
             st.session_state.masked_query_result_chat = masked_df
-            #st.dataframe(masked_df)
+            # st.dataframe(masked_df)
+
             
             # 表示用にCSV形式に変換（先頭5行などに制限可）
             df_preview = st.session_state.masked_query_result_chat.head(5)  # 必要に応じて制限
@@ -854,12 +874,12 @@ if st.session_state.query_result_chat is not None:
                 ]
 
                 # 送信前にトークン数を制限
-                trimmed_messages_for_chat_summary = trim_messages_to_token_limit(messages_for_chat_summary, max_tokens=10000, model_name="gpt-4o-mini")
+                trimmed_messages_for_chat_summary = trim_messages_to_token_limit(messages_for_chat_summary, max_tokens=10000, model_name="gpt-4o-mini") # ■送信するトークン数の上限
 
                 summary_response_chat = client.chat.completions.create(
                     model=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME"), # GPT-4o miniを指定
                     messages=trimmed_messages_for_chat_summary,
-                    max_tokens=500
+                    max_tokens=1000 # ■受信するトークン数の上限
                 )
 
                 ## AIからの返答をセッション(session_state.summary_chat)に保存
