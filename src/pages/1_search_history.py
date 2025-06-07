@@ -61,7 +61,7 @@ def generate_openai_embedding(text, client):
         st.error(f"Embedding生成エラー: {e}")
         return None
 
-def search_ai_search(query_text, search_client, openai_client, top_n=3): #Azure AI Search (ハイブリッド検索)の結果件数n=XのときX件。3件表示。
+def search_ai_search(query_text, search_client, openai_client, top_n=3): #Azure AI Search ((ベクトル検索(意味で探す))の結果件数n=XのときX件。3件表示。
     if not search_client or not query_text: return []
     try:
         embedding = generate_openai_embedding(query_text, openai_client)
@@ -100,7 +100,7 @@ else:
     if st.button("検索実行", type="primary"):
         if search_query:
             with st.spinner("履歴を検索中..."):
-                st.markdown("### Azure AI Search (ハイブリッド検索) の結果")
+                st.markdown("### Azure AI Search (ベクトル検索(意味で探す)) の結果")
                 ai_search_results = search_ai_search(search_query, search_client, openai_client)
                 if ai_search_results:
                     for result in ai_search_results:
