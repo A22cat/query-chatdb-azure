@@ -1,3 +1,4 @@
+# DBスキーマ管理と質問の例
 import streamlit as st
 import pyodbc
 import os
@@ -304,7 +305,7 @@ with st.expander("質問例を見る（プロンプト作成のヒント）", ex
 - 各製品の総売上金額を計算して
 - 顧客ID「4」の今までの購入履歴を表示して。
 - 最も購入額が多い優良顧客は誰？
-- 直近に販売した製品名を3つ教えて。
+- 直近に販売開始した製品名を3つ教えて。
 - 昨年(XXXX年)と比較して、今年(XXXX年)の月別売上はどう推移している？
     """, language="markdown")
     st.subheader("📦 在庫・倉庫に関する質問")
