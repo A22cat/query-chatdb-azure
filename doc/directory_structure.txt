@@ -15,12 +15,10 @@ query-chatdb-azure/
 │   └── chat_history/                 # (参考用)ローカルのチャット履歴
 │       └── chat_history.json
 ├── doc/
-│   ├── architecture.md
-│   ├── features.md
-│   ├── innovation.md
-│   ├── pitch.md
-│   ├── scalability.md
-│   └── setup_guide.md
+│   ├── architecture_diagram.pdf   # システム構成図（画像 or pdf）
+│   ├── directory_structure.txt    # ディレクトリ構成
+│   ├── setup_guide.md             # セットアップ手順（デプロイ手順含む）
+│   └── summary.md                 # 要約
 ├── src/
 │   └── pages/
 │   │   ├── 1_search_history.py      # 履歴検索 (Azure AI Search, Cosmos DB)
@@ -34,8 +32,6 @@ query-chatdb-azure/
 │       └── summarilze_results_prompt.md
 │   ├── db_config.py
 │   └──  main_db_chat_ai.py   # Streamlitメインアプリ
-├── video/
-│   └── pitch_video.txt
 ├── .env
 ├── .env.example
 ├── .gitignore
