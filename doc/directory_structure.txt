@@ -1,0 +1,44 @@
+ディレクトリ構成
+
+query-chatdb-azure/
+├── config/
+│   └── data_masking/
+│        └── masking_columns.json
+├── data/
+│   ├── DB/
+│   │   ├── create/                  # テーブル作成SQL
+│   │   │   ├── 01_products_mst.sql
+│   │   │   └── ... (全10ファイル)
+│   │   └── csv/                     # インポート用CSVデータ
+│   │       ├── 01_product s_mst_Results.csv
+│   │       └── ... (全10ファイル)
+│   └── chat_history/                 # (参考用)ローカルのチャット履歴
+│       └── chat_history.json
+├── doc/
+│   ├── architecture.md
+│   ├── features.md
+│   ├── innovation.md
+│   ├── pitch.md
+│   ├── scalability.md
+│   └── setup_guide.md
+├── src/
+│   └── pages/
+│   │   ├── 1_search_history.py      # 履歴検索 (Azure AI Search, Cosmos DB)
+│   │   └── 2_db_schema_getter.py    # DBスキーマ管理と質問例
+│   ├── prompts_nltosql/
+│   │   ├── nltosql/
+│   │   │    └── 01_natural_language_to_sql.md
+│   │   ├── employees_mst_table_definition.md
+│   │   └── ... (各テーブル定義書)
+│   └── prompts_summary/
+│       └── summarilze_results_prompt.md
+│   ├── db_config.py
+│   └──  main_db_chat_ai.py   # Streamlitメインアプリ
+├── video/
+│   └── pitch_video.txt
+├── .env
+├── .env.example
+├── .gitignore
+├── README.md
+├── requirements.txt
+└── LICENSE
