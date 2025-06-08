@@ -1,0 +1,105 @@
+■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+Azureポータルで、ベクトルフィールド（例: summary_vector）に「リスト形式の数値配列」を設定する方法。
+・フィールド名：summary_vector
+・種類：Collection(Edm.Single)
+■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+
+Azureポータルでベクトルフィールド（例: summary_vector）を「リスト形式の数値配列」として設定し、ベクトル検索プロファイルも含めて構成する手順をまとめます。
+
+■1. ベクトルフィールドの作成手順（Azureポータル）
+1.Azureポータルにログインし、AI Searchサービスを開く
+2.左メニューから「インデックス」を選択し、インデックスを作成または編集
+3.「インデックスの追加」または「編集」ボタンをクリック
+4.
+フィールドの追加画面で、以下の設定を行う
+
+項目	設定値例／説明
+・フィールド名	summary_vector
+・種類	Collection(Edm.Single)
+・取得可能	true（検索結果で取得できるようにする）
+・検索可能	true（ベクトル検索対象とする）
+・フィルター可能	false（ベクトルフィールドは不可）
+・並べ替え可能	false（ベクトルフィールドは不可）
+・ファセット可能	false（ベクトルフィールドは不可）
+・ディメンション	1536（例: OpenAIのtext-embedding-ada-002やtext-embedding-3-smallの次元数）
+・ベクトル検索プロファイル	後述の「ベクトル検索プロファイル」で作成した名称（例: my-vector-profile）
+
+
+5.他の必要なフィールド（例: id, question, generated_sql, summary, timestamp）も設定
+6.「保存」ボタンをクリック
+
+■2. ディメンション名について
+・Azureポータル上で「ディメンション名」という項目はありません。
+・「ディメンション」は、ベクトルフィールドの属性として「次元数（例: 1536）」を指定します。
+・ディメンション名を付ける必要はなく、dimensions: 1536 のように数値で指定します。
+
+■3. ベクトル検索プロファイルの設定方法
+1.インデックス作成／編集画面で「ベクトル検索」セクションを選択
+2.「プロファイルの追加」をクリック
+3.プロファイル名を入力、プロファイル名：my-vector-profile-01（例: my-vector-profile、vector-profile-1748932868930、）
+4.アルゴリズムの「作成」
+---
+例:アルゴリズムのパラメータを設定（デフォルト値でも可）
+・ベクトルアルゴリズム
+アルゴリズム名:hnsw-01 (例：hnsw-1、vector-config-1748933060962）
+種類: hnsw
+
+・Kindパラメーター
+・m(双方向リンク数(m)): 4
+・efConstruction: 400
+・efSearch: 500
+・metric(類似性メトリック): cosine
+---
+
+
+5.アルゴリズムを選択：hnsw-01（例: HNSW）
+6.プロファイルを保存
+
+参考
+ベクトル化：ベクトル化なし
+圧縮：圧縮構成なし
+
+■4. ベクトルフィールドの構成例（JSON形式）
+json
+{
+  "name": "summary_vector",
+  "type": "Collection(Edm.Single)",
+  "searchable": true,
+  "retrievable": true,
+  "filterable": false,
+  "sortable": false,
+  "facetable": false,
+  "dimensions": 1536,
+  "vectorSearchProfile": "my-vector-profile-01"
+}
+
+■5. ベクトル検索プロファイルの構成例（JSON形式）
+json
+"vectorSearch": {
+  "algorithms": [
+    {
+      "name": "hnsw-01",
+      "kind": "hnsw",
+      "hnswParameters": {
+        "m": 4,
+        "efConstruction": 400,
+        "efSearch": 500,
+        "metric": "cosine"
+      }
+    }
+  ],
+  "profiles": [
+    {
+      "name": "my-vector-profile-01",
+      "algorithm": "hnsw-1"
+    }
+  ]
+}
+
+■6. まとめ
+・Azureポータルでインデックスを作成／編集し、ベクトルフィールド（例: summary_vector）を追加する。
+・種類は Collection(Edm.Single)、属性は「検索可能・取得可能」、ディメンションは「1536」など適切な数値を指定。
+・「ベクトル検索」セクションでプロファイルを作成し、ベクトルフィールドに割り当てる。
+・ディメンション名は不要、ベクトル検索プロファイル名（例: my-vector-profile）は自由に命名可能。
+
+この構成で、summary_vector フィールドに「リスト形式の数値配列（例: [0.1, -0.2, 0.3, ...]）」をアップロードできるようになります。
