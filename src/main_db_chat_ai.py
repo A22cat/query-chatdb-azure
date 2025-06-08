@@ -593,7 +593,7 @@ with st.sidebar:
                     history = json.load(f) # ローカルファイルからの履歴
                 except json.JSONDecodeError:
                     history = []
-                for item in reversed(history[-5:]): #表示するのはファイルからの履歴（最大5件）
+                for item in reversed(history[-5:]): # ■表示するのはファイルからの履歴（最大5件）
                     st.markdown(f"**日時：** {item.get('timestamp', '')}")
                     st.markdown(f"**質問：** {item.get('question', '')}")
                     st.markdown(f"**生成SQL：** `{item.get('generated_sql', '')}`")
@@ -606,7 +606,7 @@ with st.sidebar:
             st.info("履歴がまだ存在しません。")
 
 # 履歴をプロンプトに変換する関数
-def build_chat_context(history, limit=3):  # ■最新の履歴件数はデフォルト値：3件
+def build_chat_context(history, limit=3):  # ■履歴件数はデフォルト値：3件
     messages = []
     for h in history[-limit:]:
         messages.append({"role": "user", "content": f"質問: {h.get('question', '')}"})
@@ -657,20 +657,20 @@ if st.session_state.summary_ui:
                     # Azure AI Searchから関連情報を取得
                     retrieved_search_context_str = ""
                     if AZURE_SEARCH_ENDPOINT and AZURE_SEARCH_KEY:
-                        search_results = search_chat_history(user_input, top_n=2) # 上位2件を取得
+                        search_results = search_chat_history(user_input, top_n=5) # ■上位n=x件を取得
                         if search_results:
                             retrieved_search_context_str += "【関連する過去のやり取り】:\n"
                             for result in search_results:
                                 retrieved_search_context_str += f"- 質問: {result.get('question', 'N/A')}\n  要約: {result.get('summary', 'N/A')}\n"
                             retrieved_search_context_str += "\n---\n"
-                    # 履歴から過去メッセージ構築（最新2件）
+                    # 履歴から過去メッセージ構築（最新5件）
                     #history_messages = build_chat_context(st.session_state.chat_history, limit=5)   # 最新の5件までに絞る（Token節約）
                     #st.write(history_messages )#確認結果
-                    # 履歴から過去メッセージ構築（最新5件） + AI Search結果 + 現在のユーザー入力
-                    history_messages_for_chat = build_chat_context(st.session_state.chat_history, limit=5) #■Token節約(最新の5件)
+                    # 履歴から過去メッセージ構築（関連性の高い履歴X件） + AI Search結果 + 現在のユーザー入力
+                    history_messages_for_chat = build_chat_context(st.session_state.chat_history, limit=5) #■Token節約(関連性の高い履歴X件)
                     constructed_messages_for_chat = []
                     # 既存のチャット履歴（画面表示用）もコンテキストに含める場合
-                    # constructed_messages_for_chat.extend(st.session_state.messages[-3:]) # 最新のチャット数件
+                    # constructed_messages_for_chat.extend(st.session_state.messages[-3:]) # チャット履歴数件
 
                     # 過去のDB操作履歴
                     constructed_messages_for_chat.extend(history_messages_for_chat)
