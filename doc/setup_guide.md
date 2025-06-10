@@ -114,7 +114,10 @@ Azure Data StudioやSSMS、VSCodeのSQL拡張機能などを使って、作成�
 # bcpコマンドの実行例 (employees_mstテーブルの場合)
 # 各パラメータはご自身の環境に合わせて変更してください。
 
-bcp [YourDatabaseName].[dbo].[Employees] in "C:\path\to\project\data\DB\csv\03_employees_mst_Results.csv" -w -C 65001 -t"," -S [YourServerName].database.windows.net -U [YourUsername] -P [YourPassword] -F 2
+参考：
+bcp [データベース名].[スキーマ名].[テーブル名] in "C:\path\to\file.csv" -w -t"," -S [サーバー名].database.windows.net -U [ユーザー名] -P [パスワード] -F 2
+
+bcp [YourDatabaseName].[dbo].[employees_mst] in "C:\path\to\project\data\DB\csv\03_employees_mst_Results.csv" -w -C 65001 -t"," -S [YourServerName].database.windows.net -U [YourUsername] -P [YourPassword] -F 2
 
 ・-w: BOM付きUTF-16 LEが一般的に推奨
 ・-t ",": フィールドの区切り文字をカンマに指定します。
