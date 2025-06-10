@@ -18,7 +18,7 @@ query-chatdb-azure/
 │   ├── architecture_diagram_Qnect.pdf   # システム構成図（pdf）
 │   ├── azure_ai_search_setup.md         # Azure AI Searchのインデックスとフィールドの設定手順
 │   ├── directory_structure.txt          # ディレクトリ構成
-│   ├── features.md                      # デモ動画と連携した機能のまとめ
+│   ├── features.md                      # Azureサービスの使用方法やデモ動画と連携した機能のまとめ
 │   ├── pitch_video.md                   # デモ動画の内容をまとめたもの
 │   ├── setup_guide.md                   # セットアップ手順（デプロイ手順含む）
 │   └── summary.md                       # 要約
