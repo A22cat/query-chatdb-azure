@@ -1,5 +1,10 @@
 # Pitch Video: Qnect (キュネクト)- 対話型DBクエリ支援システム
 
+## 0. 動画URL
+https://www.youtube.com/watch?v=fMZlEDECTH4
+
+本動画は、Azureクラウドと生成AI技術を駆使した対話型DBクエリ支援システム『Qnect（キュネクト）』の5分間デモ動画です。
+
 ## 1. 概要 (0:00～)
 
 今回開発した「Qnect（キュネクト）」は、Azure OpenAIとAzure AI Searchを活用した、**SQLの専門知識が不要で自然言語を用いてデータベースと対話できる**システムです。
