@@ -1,4 +1,4 @@
-ディレクトリ構成
+ディレクトリ構成 (一部)
 
 query-chatdb-azure/
 ├── config/
@@ -6,23 +6,26 @@ query-chatdb-azure/
 │        └── masking_columns.json
 ├── data/
 │   ├── DB/
-│   │   ├── create/                  # テーブル作成SQL
+│   │   ├── create/                     # テーブル作成SQL
 │   │   │   ├── 01_products_mst.sql
 │   │   │   └── ... (全10ファイル)
-│   │   └── csv/                     # インポート用CSVデータ
+│   │   └── csv/                        # インポート用CSVデータ
 │   │       ├── 01_product s_mst_Results.csv
 │   │       └── ... (全10ファイル)
-│   └── chat_history/                 # (参考用)ローカルのチャット履歴
+│   └── chat_history/                    # (参考用)ローカルのチャット履歴
 │       └── chat_history.json
 ├── doc/
-│   ├── architecture_diagram.pdf   # システム構成図（画像 or pdf）
-│   ├── directory_structure.txt    # ディレクトリ構成
-│   ├── setup_guide.md             # セットアップ手順（デプロイ手順含む）
-│   └── summary.md                 # 要約
+│   ├── architecture_diagram_Qnect.pdf   # システム構成図（pdf）
+│   ├── azure_ai_search_setup.md         # Azure AI Searchのインデックスとフィールドの設定手順
+│   ├── directory_structure.txt          # ディレクトリ構成
+│   ├── features.md                      # デモ動画と連携した機能のまとめ
+│   ├── pitch.md                         # デモ動画の内容をまとめたもの
+│   ├── setup_guide.md                   # セットアップ手順（デプロイ手順含む）
+│   └── summary.md                       # 要約
 ├── src/
 │   └── pages/
-│   │   ├── 1_search_history.py      # 履歴検索 (Azure AI Search, Cosmos DB)
-│   │   └── 2_db_schema_getter.py    # DBスキーマ管理と質問例
+│   │   ├── 1_search_history.py         # 履歴検索
+│   │   └── 2_db_schema_getter.py       # DBスキーマ管理と質問例
 │   ├── prompts_nltosql/
 │   │   ├── nltosql/
 │   │   │    └── 01_natural_language_to_sql.md

@@ -8,40 +8,53 @@
 
 ## ✨ 主な機能
 
-- **自然言語クエリ**: 「各製品の総売上金額を計算して」のような日常的な言葉でDBに質問できます。
-- **SQL自動生成と実行**: Azure OpenAIが質問を解析し、安全なSQLクエリを生成してAzure SQL Databaseで実行します。
-- **結果の要約と対話**: クエリ結果を平易な日本語で要約し、追加の質問にも文脈を保って応答します。
-- **永続的な会話履歴**: Azure Cosmos DBに会話履歴を保存し、セッションをまたいで文脈を維持します。
-- **データマスキング**: 個人情報などの機密データは自動的にマスクされ、安全なデータアクセスを実現します。
+- 自然言語からのクエリ生成・実行(SQL自動生成)
+- クエリ結果の要約・分析
+- データアクセス・変更を防ぐためのセキュリティ機能
+- 会話レスポンス内の機密情報のマスキング
+- 対話履歴を基にした文脈保持
+- ユーザーによるクエリ修正指示への柔軟な対応
+- DBからDBスキーマ(テーブル構造)を取得してAzure OpenAIに提示可能
+- 埋込用ベクトル生成＋類似検索(Azure OpenAI Embedding + Azure AI Search ベクトルインデックス)
+- キーワード検索(完全一致)(Azure Cosmos DB)
+- Azure OpenAIへの1回あたりの送信Token数と受信Token数を制御
+
 
 ## 🚀 技術スタック
+- Azure OpenAI (Chat用モデル)[gpt-4o または gpt-4o miniなど]
+- Azure SQL Database (構造化データ)
+- Python
+- Streamlit (UI)
+- Azure OpenAI (Embedding用モデル)[text-embedding-ada-002 または text-embedding-3-smallなど]
+- Azure AI Search (類似質問検索)
+- Azure Cosmos DB (会話履歴)
+- Azure App Service
 
-- **UI**: Streamlit
-- **バックエンド/オーケストレーション**: Python, LangChain
-- **AIモデル**: Azure OpenAI [gpt-4o または gpt-4o mini][text-embedding-ada-002 または text-embedding-3-small]
-- **データベース**: Azure SQL Database (構造化データ), Azure Cosmos DB (会話履歴)
-- **検索**: Azure AI Search (類似質問検索)
-- **ホスティング**: Azure App Service
 
 ## 📂 フォルダ構成
 
 フォルダ構成は `directory_structure.txt` を参照してください。
 
-## 🛠️ セットアップと実行
+
+## 🛠️ セットアップに関する設定、ローカル環境での実行手順、および、Azure App Serviceへのデプロイ手順
 
 詳細な手順は `doc/setup_guide.md` を参照してください。
 
-### ローカルでの実行
 
-1.  `.env` ファイルを作成し、Azureサービスの資格情報を設定します。
-2.  `pip install -r requirements.txt` を実行します。
-3.  `streamlit run src/main_db_chat_ai.py` を実行します。
+## 📖 使い方
 
-### Azureへのデプロイ
+システムを開いたら、メイン画面で 「DB接続！」ボタン を押し、データベースへ接続してください。
 
-`doc/setup_guide.md` の指示に従い、Azure App Serviceにデプロイします。
+チャット入力欄に質問を日本語で入力してください。AIが応答し、必要に応じてデータベースから情報を取得し要約します。
+通常のUI側でSQL作成とSQLを実行し「要約と結果の説明」ボタンを押すと、チャットUIが表示され、対話型のチャットを開始できます。
+新しい会話を始めたい場合は、左のサイドバーで「新しい会話を始める」ボタンをクリックしてください。
 
-## 使い方
+DBスキーマ管理画面の下部の"質問例を見る（プロンプト作成のヒント）"を押すと、質問例が表示されます。質問作成の参考としてご活用ください。
 
-アプリケーションを開き、チャット入力欄にデータベースに関する質問を日本語で入力してください。AIが応答し、必要に応じてデータベースから情報を取得し要約します。
-新しい会話を始めたい場合は、サイドバーの「新しい会話を始める」ボタンをクリックしてください。
+## 🖼️ システム画面イメージ
+
+### 質問例の画面
+![質問例表示画面](./doc/screenshots/01_screen_example_questions.png)
+
+### メイン画面
+![メイン画面](./doc/screenshots/02_screen_main.png)
